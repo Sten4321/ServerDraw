@@ -16,5 +16,17 @@ namespace ServerDraw
         {
             InitializeComponent();
         }
+
+
+        private void SendCoordinates()
+        {
+            //REMEMBER
+
+            //relative to form
+           Point coordinate = PointToClient(Cursor.Position); 
+
+
+            //send that shit
+        }
     }
 }

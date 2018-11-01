@@ -21,6 +21,7 @@ namespace ClientDraw
 
         Pen pen;
 
+        //current coordinates
         #region Prototype fields
         // coordinates out of screen
         int x = -1;
@@ -63,9 +64,11 @@ namespace ClientDraw
             //Starts thread that receives messages from DrawClient
             messageReceiver = new Thread(ReceiveMessage);
             messageReceiver.IsBackground = true;
-            messageReceiver.Start();
+            //messageReceiver.Start();
 
         }
+
+        //current functionality
         #region Prototype Methods
         /// <summary>
         /// Allows enables drawing and sets starting position from which to draw
@@ -179,20 +182,26 @@ namespace ClientDraw
         /// <param name="message"></param>
         private void ConvertCoordinates(string message)
         {
+         
             //creates string array that contains the elements on each side of ',' char
             string[] coordinates = message.Split(',');
 
             if (coordinates.Length == 2 /*  or is it 1 because of 0 index???  */ )
-            {
+            {              
+
+                //X
                 if (coordinates[0].All(char.IsDigit))
                 {
                     //Updates new x position
-                    Int32.TryParse(coordinates[0], out newX);
+                    Int32.TryParse(coordinates[0], out newX);                  
+
                 }
+
+                //y
                 if (coordinates[1].All(char.IsDigit))
                 {
                     //Updates new y position
-                    Int32.TryParse(coordinates[1], out newY);
+                       Int32.TryParse(coordinates[1], out newY);                    
                 }
             }
         }
