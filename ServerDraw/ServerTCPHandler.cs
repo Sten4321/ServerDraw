@@ -14,6 +14,7 @@ namespace ServerDraw
     {
         public static readonly object key = new object();
         private static List<string> lines = new List<string>();
+        int sleepDelay = 17;
 
         /// <summary>
         /// handles the list of lines used
@@ -89,8 +90,8 @@ namespace ServerDraw
             // retrieve client from parameter passed to thread
             TcpClient client = (TcpClient)obj;
             // sets two streams
-            StreamWriter sWriter = new StreamWriter(client.GetStream(), Encoding.ASCII);
-            StreamReader sReader = new StreamReader(client.GetStream(), Encoding.ASCII);
+            StreamWriter sWriter = new StreamWriter(client.GetStream(), Encoding.UTF8);
+            StreamReader sReader = new StreamReader(client.GetStream(), Encoding.UTF8);
             // you could use the NetworkStream to read and write, 
             // but there is no forcing flush, even when requested
             Boolean bClientConnected = true;
@@ -105,10 +106,10 @@ namespace ServerDraw
                 // reads from stream
                 try
                 {
+                    sData = sReader.ReadLine();
+
                     Console.WriteLine("Client > " + sData);
                     Console.WriteLine("Remote host port: " + endPoint.Port.ToString() + " Local socket port: " + localPoint.Port.ToString());
-
-                    sData = sReader.ReadLine();
                 }
                 catch (Exception)
                 {
@@ -116,7 +117,7 @@ namespace ServerDraw
                     bClientConnected = false;
                 }
 
-                if (sData == "Draw")
+                if (sData == "Draw" || sData == "draw")
                 {
                     Console.WriteLine("Connected Draw");
                     while (bClientConnected)
@@ -124,26 +125,34 @@ namespace ServerDraw
                         try
                         {
                             sData = sReader.ReadLine();
-                            DrawingHandler(sData);
+                            if (!(sData == string.Empty))
+                            {
+                                DrawingHandler(sData);
+                            }
                         }
                         catch (Exception)
                         {
                             Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
                             bClientConnected = false;
                         }
+                        Thread.Sleep(sleepDelay);
                     }
                 }
-                else if (sData == "View")
+                else if (sData == "View" || sData == "view")
                 {
                     Console.WriteLine("Connected View");
-                    try
+                    while (bClientConnected)
                     {
-                        SuccesHandeler(sWriter);
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
-                        bClientConnected = false;
+                        try
+                        {
+                            SuccesHandeler(sWriter);
+                        }
+                        catch (Exception)
+                        {
+                            Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
+                            bClientConnected = false;
+                        }
+                        Thread.Sleep(sleepDelay);
                     }
                 }
             }
@@ -155,9 +164,13 @@ namespace ServerDraw
         /// <param name="sWriter"></param>
         private void SuccesHandeler(StreamWriter sWriter)
         {
-            for (int i = 0; i < Lines.Count; i++)
+            if (Lines.Count > 0)
             {
-                sWriter.WriteLine(lines[i]);
+                for (int i = 0; i < Lines.Count; i++)
+                {
+                    sWriter.WriteLine(lines[i]);
+                    sWriter.Flush();
+                }
             }
         }
 
@@ -168,7 +181,11 @@ namespace ServerDraw
         /// <param name="sWriter"></param>
         private void DrawingHandler(string sData)
         {
-            Lines.Add(sData);
+            if (sData != null)
+            {
+                Lines.Add(sData);
+                Console.WriteLine(sData);
+            }
         }
     }
 }

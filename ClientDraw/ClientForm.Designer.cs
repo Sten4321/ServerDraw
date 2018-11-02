@@ -43,14 +43,15 @@
             this.panel1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseMove);
             this.panel1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseUp);
             // 
-            // Form1
+            // ClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 261);
             this.Controls.Add(this.panel1);
-            this.Name = "Form1";
+            this.Name = "ClientForm";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.ClientForm_Load);
             this.ResumeLayout(false);
 
         }
