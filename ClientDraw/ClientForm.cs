@@ -10,12 +10,24 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Net.Sockets;
 using System.Net;
-
+using System.IO;
 
 namespace ClientDraw
 {
     public partial class ClientForm : Form
     {
+
+        //network
+        private TcpClient _client;
+
+        private StreamReader _sReader;
+        private StreamWriter _sWriter;
+
+        private Boolean _isConnected;
+
+        private string ip = "10.131.69.236";
+        int port = 25565;
+        //
 
         Graphics graphics;
 
@@ -50,22 +62,6 @@ namespace ClientDraw
         public ClientForm()
         {
             InitializeComponent();
-            graphics = panel1.CreateGraphics();
-
-            //Smoother edges
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-            pen = new Pen(Color.Black, 6f);
-
-            //Draws smoother lines
-            pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
-
-
-            //Starts thread that receives messages from DrawClient
-            messageReceiver = new Thread(ReceiveMessage);
-            messageReceiver.IsBackground = true;
-            //messageReceiver.Start();
-
         }
 
         //current functionality
@@ -82,24 +78,29 @@ namespace ClientDraw
             isDrawing = true;
 
 
-            x = mouse.X;
-            y = mouse.Y;
+            oldX = mouse.X;
+            oldY = mouse.Y;
         }
 
         private void panel1_MouseMove(object sender, MouseEventArgs mouse)
         {
             //Should be in an Update Method
-            if (isDrawing && x != -1 && y != -1)
+            if (isDrawing && oldX != -1 && oldY != -1)
             {
                 //draw line from old position to new position
 
-                graphics.DrawLine(pen, new Point(x, y), new Point(mouse.X, mouse.Y));
+                graphics.DrawLine(pen, new Point(oldX, oldY), new Point(mouse.X, mouse.Y));
 
 
                 //Method should be in drawclient, and should sent its mouse coordinates
                 //Update coordinates
-                x = mouse.X;
-                y = mouse.Y;
+
+                SendToServer(string.Format("{0},{0};{0},{0}", oldX, oldY, newX, newY));
+
+                oldX = mouse.X;
+                oldY = mouse.Y;
+
+                Thread.Sleep(10);
             }
         }
 
@@ -122,16 +123,7 @@ namespace ClientDraw
         {
             while (true)
             {
-                if (isDrawing && x != -1 && y != -1)
-                {
-                    //draw line from old position to new position
-                    graphics.DrawLine(pen, new Point(oldX, oldY), new Point(newX, newY));
 
-
-                    //Update coordinates
-                    oldX = newX;
-                    oldY = newY;
-                }
 
             }
         }
@@ -176,24 +168,59 @@ namespace ClientDraw
             }
         }
 
+        private void SendCoordinates(int oX, int oY, int nX, int nY)
+        {
+            string message = string.Format("{0},{1};{2},{3}", oX, oY, nX, nY);
+
+            SendToServer(message);
+
+        }
+        public void SendToServer(string coordinatesString)
+        {
+            String sData = null;
+            _isConnected = true;
+
+
+            sData = coordinatesString;
+            // write data and make sure to flush, or the buffer will continue to 
+            // grow, and your data might not be sent when you want it, and will
+            // only be sent once the buffer is filled.
+            try
+            {
+                _sWriter.WriteLine(sData);
+                _sWriter.Flush();
+
+                // if you want to receive anything
+
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine("Serveren er lukket ned");
+                Console.ReadLine();
+                Thread.CurrentThread.Abort();
+            }
+
+
+        }
+
         /// <summary>
         /// Converts the string message containing coordinates, and updates the new x&y
         /// </summary>
         /// <param name="message"></param>
         private void ConvertCoordinates(string message)
         {
-         
+
             //creates string array that contains the elements on each side of ',' char
             string[] coordinates = message.Split(',');
 
             if (coordinates.Length == 2 /*  or is it 1 because of 0 index???  */ )
-            {              
+            {
 
                 //X
                 if (coordinates[0].All(char.IsDigit))
                 {
                     //Updates new x position
-                    Int32.TryParse(coordinates[0], out newX);                  
+                    Int32.TryParse(coordinates[0], out newX);
 
                 }
 
@@ -201,12 +228,41 @@ namespace ClientDraw
                 if (coordinates[1].All(char.IsDigit))
                 {
                     //Updates new y position
-                       Int32.TryParse(coordinates[1], out newY);                    
+                    Int32.TryParse(coordinates[1], out newY);
                 }
             }
         }
 
+        /// <summary>
+        /// Runs when finished loading
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ClientForm_Load(object sender, EventArgs e)
+        {
+            graphics = panel1.CreateGraphics();
+
+            //Smoother edges
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            pen = new Pen(Color.Black, 6f);
+
+            //Draws smoother lines
+            pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
 
 
+            //Starts thread that receives messages from DrawClient
+            //messageReceiver = new Thread();
+            //messageReceiver.IsBackground = true;
+            //messageReceiver.Start();
+
+
+            _client = new TcpClient();
+            _client.Connect(IPAddress.Parse(ip), port);
+            NetworkStream ns = _client.GetStream();
+            _sReader = new StreamReader(ns, Encoding.UTF8);
+            _sWriter = new StreamWriter(ns, Encoding.UTF8);
+            SendToServer("Draw");
+        }
     }
 }
