@@ -1,6 +1,6 @@
-﻿namespace ServerDraw
+﻿namespace ClientViewDraw
 {
-    partial class Form1
+    partial class ViewForm
     {
         /// <summary>
         /// Required designer variable.

@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace ClientViewDraw
 {
-    public partial class Form1 : Form
+    public partial class ViewForm : Form
     {
-        public Form1()
+        public ViewForm()
         {
             InitializeComponent();
         }
