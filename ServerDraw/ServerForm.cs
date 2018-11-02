@@ -12,21 +12,17 @@ namespace ServerDraw
 {
     public partial class ServerForm : Form
     {
+        ServerTCPHandler SHandler;
+
         public ServerForm()
         {
             InitializeComponent();
         }
 
-
-        private void SendCoordinates()
+        private void ServerForm_Load(object sender, EventArgs e)
         {
-            //REMEMBER
-
-            //relative to form
-           Point coordinate = PointToClient(Cursor.Position); 
-
-
-            //send that shit
+            SHandler = new ServerTCPHandler();
+            SHandler.TcpListener();
         }
     }
 }
