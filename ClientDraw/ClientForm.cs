@@ -78,8 +78,9 @@ namespace ClientDraw
             isDrawing = true;
 
 
-            oldX = mouse.X;
-            oldY = mouse.Y;
+            oldX = this.PointToClient(Cursor.Position).X;
+            oldY = this.PointToClient(Cursor.Position).Y;
+
         }
 
         private void panel1_MouseMove(object sender, MouseEventArgs mouse)
@@ -87,18 +88,22 @@ namespace ClientDraw
             //Should be in an Update Method
             if (isDrawing && oldX != -1 && oldY != -1)
             {
-                //draw line from old position to new position
+                if (oldX != newX && oldY != newY)
+                {
+                    //draw line from old position to new position
 
-                graphics.DrawLine(pen, new Point(oldX, oldY), new Point(mouse.X, mouse.Y));
+                    graphics.DrawLine(pen, new Point(oldX, oldY), new Point(this.PointToClient(Cursor.Position).X, this.PointToClient(Cursor.Position).Y));
 
 
-                //Method should be in drawclient, and should sent its mouse coordinates
-                //Update coordinates
+                    //Method should be in drawclient, and should sent its mouse coordinates
+                    //Update coordinates
+                    SendToServer(string.Format("{0},{0},{0},{0}", oldX, oldY, newX, newY));
+                   
+                }
 
-                SendToServer(string.Format("{0},{0};{0},{0}", oldX, oldY, newX, newY));
 
-                oldX = mouse.X;
-                oldY = mouse.Y;
+                oldX = this.PointToClient(Cursor.Position).X;
+                oldY = this.PointToClient(Cursor.Position).Y;
 
                 Thread.Sleep(10);
             }
@@ -170,7 +175,10 @@ namespace ClientDraw
 
         private void SendCoordinates(int oX, int oY, int nX, int nY)
         {
-            string message = string.Format("{0},{1};{2},{3}", oX, oY, nX, nY);
+            string message = string.Format("{0},{1},{2},{3}", oX, oY, nX, nY);
+
+
+          //  ConvertCoordinates(message);
 
             SendToServer(message);
 
@@ -181,7 +189,10 @@ namespace ClientDraw
             _isConnected = true;
 
 
+
             sData = coordinatesString;
+
+            
             // write data and make sure to flush, or the buffer will continue to 
             // grow, and your data might not be sent when you want it, and will
             // only be sent once the buffer is filled.
@@ -211,26 +222,45 @@ namespace ClientDraw
         {
 
             //creates string array that contains the elements on each side of ',' char
+
             string[] coordinates = message.Split(',');
 
-            if (coordinates.Length == 2 /*  or is it 1 because of 0 index???  */ )
+            Point[] cords = new Point[1];
+
+
+
+            //X
+            if (coordinates[0].All(char.IsDigit))
             {
+                //Updates new x position
+                Int32.TryParse(coordinates[0], out oldX);
 
-                //X
-                if (coordinates[0].All(char.IsDigit))
-                {
-                    //Updates new x position
-                    Int32.TryParse(coordinates[0], out newX);
-
-                }
-
-                //y
-                if (coordinates[1].All(char.IsDigit))
-                {
-                    //Updates new y position
-                    Int32.TryParse(coordinates[1], out newY);
-                }
             }
+
+            //y
+            if (coordinates[1].All(char.IsDigit))
+            {
+                //Updates new y position
+                Int32.TryParse(coordinates[1], out oldY);
+            }
+
+            //newx
+            if (coordinates[2].All(char.IsDigit))
+            {
+                //Updates new y position
+                Int32.TryParse(coordinates[1], out newX);
+            }   //X
+            if (coordinates[3].All(char.IsDigit))
+            {
+                //Updates new x position
+                Int32.TryParse(coordinates[0], out newY);
+
+            }
+
+            cords[0] = new Point(oldX, oldY);
+            cords[1] = new Point(newX, newY);
+
+
         }
 
         /// <summary>
