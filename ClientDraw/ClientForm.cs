@@ -118,7 +118,7 @@ namespace ClientDraw
 
         //To add:
 
-        private void Update()
+        private void UpdateDrawing()
         {
             while (true)
             {
@@ -182,18 +182,18 @@ namespace ClientDraw
         /// <param name="message"></param>
         private void ConvertCoordinates(string message)
         {
-         
+
             //creates string array that contains the elements on each side of ',' char
             string[] coordinates = message.Split(',');
 
             if (coordinates.Length == 2 /*  or is it 1 because of 0 index???  */ )
-            {              
+            {
 
                 //X
                 if (coordinates[0].All(char.IsDigit))
                 {
                     //Updates new x position
-                    Int32.TryParse(coordinates[0], out newX);                  
+                    Int32.TryParse(coordinates[0], out newX);
 
                 }
 
@@ -201,7 +201,7 @@ namespace ClientDraw
                 if (coordinates[1].All(char.IsDigit))
                 {
                     //Updates new y position
-                       Int32.TryParse(coordinates[1], out newY);                    
+                    Int32.TryParse(coordinates[1], out newY);
                 }
             }
         }
