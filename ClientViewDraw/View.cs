@@ -17,7 +17,8 @@ namespace ClientViewDraw
         private static StreamReader sReader;
         private static StreamWriter sWriter; //Maybe if we want to make a game
         private static bool connected;
-        private static int portNumber = 2565;
+        private static int portNumber = 25565;
+        private static string iPAddress = "10.131.69.236";
         private static string[] cords;
 
         /// <summary>
@@ -35,7 +36,8 @@ namespace ClientViewDraw
         private static void ClientSetUp()
         {
             slaveClient = new TcpClient();
-            slaveClient.Connect(IPAddress.Any, portNumber);//Lets the client connect.
+            slaveClient.Connect(IPAddress.Parse(iPAddress), portNumber);//Lets the client connect.
+
             GetDrawing();
         }
         private static void GetDrawing()
@@ -43,19 +45,20 @@ namespace ClientViewDraw
             NetworkStream getStream = slaveClient.GetStream();//Gets info from client
             sReader = new StreamReader(getStream, Encoding.UTF8);
             sWriter = new StreamWriter(getStream, Encoding.UTF8);
-
+            sWriter.WriteLine("View");
             connected = true;
 
             while (connected)
             {
                 try
                 {
-
+                    
                 }
-                catch(Exception e)
+                catch(Exception)
                 {
                     Thread.CurrentThread.Abort();
                 }
+                Thread.Sleep(17);
             }
 
         }
