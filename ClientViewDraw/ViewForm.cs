@@ -16,13 +16,41 @@ namespace ClientViewDraw
 {
     public partial class ViewForm : Form
     {
+        private static readonly object key = new object();
+        Graphics graphics;
+        Pen pen;
         private static TcpClient slaveClient;
         private static StreamReader sReader;
         private static StreamWriter sWriter; //Maybe if we want to make a game
         private static bool connected;
         private static int portNumber = 25565;
         private static string iPAddress = "10.131.69.236";
-        private static string[] cords;
+        private static List<Point[]> drawCordinates = new List<Point[]>();
+        Thread viewThread;
+
+        int oldX = -1;
+        int oldY = -1;
+
+        int newX = -1;
+        int newY = -1;
+
+        private static List<Point[]> DrawCordinates
+        {
+            get
+            {
+                lock (key)
+                {
+                    return drawCordinates;
+                }
+            }
+            set
+            {
+                lock (key)
+                {
+                    drawCordinates = value;
+                }
+            }
+        }
 
         public ViewForm()
         {
@@ -31,7 +59,18 @@ namespace ClientViewDraw
 
         private void ViewForm_Load(object sender, EventArgs e)
         {
-            ClientSetUp();
+            viewThread = new Thread(ClientSetUp);
+            viewThread.Start();
+            viewThread.IsBackground = true;
+            graphics = panel1.CreateGraphics();
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            pen = new Pen(Color.Black, 6f);
+
+            //Draws smoother lines
+            pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
+
+
         }
 
 
@@ -50,25 +89,99 @@ namespace ClientViewDraw
             sWriter.WriteLine("View");
             sWriter.Flush();
             connected = true;
+            string sData = null;
 
             while (connected)
             {
                 try
                 {
-                    Draw(sReader);
+                    sData = sReader.ReadLine();
+                    Recieve(sData);
                 }
                 catch (Exception)
                 {
-                    Thread.CurrentThread.Abort();
+                    connected = false;
                 }
                 Thread.Sleep(17);
             }
 
         }
 
-        private void Draw(StreamReader sReader)
+        private void Recieve(string sData)
+        {
+            if (sData != null && sData != string.Empty)
+            {
+                ConvertCoordinates(sData);
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            Draw();
+        }
+
+
+        private void Draw()
+        {
+            lock (key)
+            {
+                foreach (Point[] point in DrawCordinates)
+                {
+                    graphics.DrawLine(pen, point[0], point[1]);
+                }
+                //DrawCordinates.Clear();
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the string message containing coordinates, and updates the new x&y
+        /// </summary>
+        /// <param name="message"></param>
+        private void ConvertCoordinates(string message)
         {
 
+            //creates string array that contains the elements on each side of ',' char
+
+            string[] coordinates = message.Split(',');
+
+            Point[] cords = new Point[1];
+
+
+
+            //X
+            if (coordinates[0].All(char.IsDigit))
+            {
+                //Updates new x position
+                Int32.TryParse(coordinates[0], out oldX);
+
+            }
+
+            //y
+            if (coordinates[1].All(char.IsDigit))
+            {
+                //Updates new y position
+                Int32.TryParse(coordinates[1], out oldY);
+            }
+
+            //newx
+            if (coordinates[2].All(char.IsDigit))
+            {
+                //Updates new y position
+                Int32.TryParse(coordinates[1], out newX);
+            }   //X
+            if (coordinates[3].All(char.IsDigit))
+            {
+                //Updates new x position
+                Int32.TryParse(coordinates[0], out newY);
+
+            }
+
+            cords[0] = new Point(oldX, oldY);
+            cords[1] = new Point(newX, newY);
+
+
+            DrawCordinates.Add(cords);
         }
     }
 }
