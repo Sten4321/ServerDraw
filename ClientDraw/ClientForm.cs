@@ -119,7 +119,7 @@ namespace ClientDraw
 
         //To add:
 
-        private void Update()
+        private void UpdateDrawing()
         {
             while (true)
             {
