@@ -103,56 +103,59 @@ namespace ServerDraw
             Console.WriteLine("Connected");
             while (bClientConnected)
             {
-                // reads from stream
-                try
+                if (sData != string.Empty)
                 {
-                    sData = sReader.ReadLine();
-
-                    Console.WriteLine("Client > " + sData);
-                    Console.WriteLine("Remote host port: " + endPoint.Port.ToString() + " Local socket port: " + localPoint.Port.ToString());
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
-                    bClientConnected = false;
-                }
-
-                if (sData == "Draw" || sData == "draw")
-                {
-                    Console.WriteLine("Connected Draw");
-                    while (bClientConnected)
+                    // reads from stream
+                    try
                     {
-                        try
-                        {
-                            sData = sReader.ReadLine();
-                            if (!(sData == string.Empty))
-                            {
-                                DrawingHandler(sData);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
-                            bClientConnected = false;
-                        }
-                        Thread.Sleep(sleepDelay);
+                        sData = sReader.ReadLine();
+
+                        Console.WriteLine("Client > " + sData);
+                        Console.WriteLine("Remote host port: " + endPoint.Port.ToString() + " Local socket port: " + localPoint.Port.ToString());
                     }
-                }
-                else if (sData == "View" || sData == "view")
-                {
-                    Console.WriteLine("Connected View");
-                    while (bClientConnected)
+                    catch (Exception)
                     {
-                        try
+                        Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
+                        bClientConnected = false;
+                    }
+
+                    if (sData == "Draw" || sData == "draw")
+                    {
+                        Console.WriteLine("Connected Draw");
+                        while (bClientConnected)
                         {
-                            SuccesHandeler(sWriter);
+                            try
+                            {
+                                sData = sReader.ReadLine();
+                                if (!(sData == string.Empty))
+                                {
+                                    DrawingHandler(sData);
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
+                                bClientConnected = false;
+                            }
+                            Thread.Sleep(sleepDelay);
                         }
-                        catch (Exception)
+                    }
+                    else if (sData == "View" || sData == "view")
+                    {
+                        Console.WriteLine("Connected View");
+                        while (bClientConnected)
                         {
-                            Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
-                            bClientConnected = false;
+                            try
+                            {
+                                SuccesHandeler(sWriter);
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine(endPoint.Port.ToString() + " " + localPoint.Port.ToString() + " lukkede forbindelsen");
+                                bClientConnected = false;
+                            }
+                            Thread.Sleep(sleepDelay);
                         }
-                        Thread.Sleep(sleepDelay);
                     }
                 }
             }
@@ -166,10 +169,13 @@ namespace ServerDraw
         {
             if (Lines.Count > 0)
             {
-                for (int i = 0; i < Lines.Count; i++)
+                lock (key)
                 {
-                    sWriter.WriteLine(lines[i]);
-                    sWriter.Flush();
+                    for (int i = 0; i < Lines.Count; i++)
+                    {
+                        sWriter.WriteLine(lines[i]);
+                        sWriter.Flush();
+                    }
                 }
             }
         }
