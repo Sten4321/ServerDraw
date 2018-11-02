@@ -193,7 +193,7 @@ namespace ClientDraw
                 // if you want to receive anything
 
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 Console.WriteLine("Serveren er lukket ned");
                 Console.ReadLine();
