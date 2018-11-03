@@ -16,6 +16,9 @@ namespace ServerDraw
         private static List<string> lines = new List<string>();
         int sleepDelay = 17;
 
+
+        List<TcpClient> viewClients = new List<TcpClient>();
+
         /// <summary>
         /// handles the list of lines used
         /// </summary>
@@ -78,6 +81,8 @@ namespace ServerDraw
                 Thread t = new Thread(new ParameterizedThreadStart(HandleClient));
                 t.Start(newClient);
                 t.IsBackground = true;
+
+                viewClients.Add(newClient);
             }
         }
 
@@ -90,8 +95,8 @@ namespace ServerDraw
             // retrieve client from parameter passed to thread
             TcpClient client = (TcpClient)obj;
             // sets two streams
-            StreamWriter sWriter = new StreamWriter(client.GetStream(), Encoding.UTF8);
-            StreamReader sReader = new StreamReader(client.GetStream(), Encoding.UTF8);
+            StreamWriter sWriter = new StreamWriter(client.GetStream(), Encoding.ASCII);
+            StreamReader sReader = new StreamReader(client.GetStream(), Encoding.ASCII);
             // you could use the NetworkStream to read and write, 
             // but there is no forcing flush, even when requested
             Boolean bClientConnected = true;
@@ -129,7 +134,7 @@ namespace ServerDraw
                                 sData = sReader.ReadLine();
                                 if (!(sData == string.Empty))
                                 {
-                                    DrawingHandler(sData);
+                                    DrawingHandler(sData, sWriter);
                                 }
                             }
                             catch (Exception)
@@ -147,7 +152,7 @@ namespace ServerDraw
                         {
                             try
                             {
-                                SuccesHandeler(sWriter);
+                                SuccesHandeler();
                             }
                             catch (Exception)
                             {
@@ -165,17 +170,24 @@ namespace ServerDraw
         /// handles what is replied
         /// </summary>
         /// <param name="sWriter"></param>
-        private void SuccesHandeler(StreamWriter sWriter)
+        private void SuccesHandeler()
         {
             if (Lines.Count > 0)
             {
+                StreamWriter sWriter;
                 lock (key)
                 {
-                    for (int i = 0; i < Lines.Count; i++)
+                    foreach (TcpClient client in viewClients)
                     {
-                        sWriter.WriteLine(lines[i]);
-                        sWriter.Flush();
+                        sWriter = new StreamWriter(client.GetStream(), Encoding.ASCII);
+
+                        for (int i = 0; i < Lines.Count; i++)
+                        {
+                            sWriter.WriteLine(lines[i]);
+                            sWriter.Flush();
+                        }
                     }
+                    lines.Clear();
                 }
             }
         }
@@ -185,12 +197,29 @@ namespace ServerDraw
         /// </summary>
         /// <param name="sData"></param>
         /// <param name="sWriter"></param>
-        private void DrawingHandler(string sData)
+        private void DrawingHandler(string sData, StreamWriter writer)
         {
             if (sData != null)
             {
                 Lines.Add(sData);
+
+
+                writer.Flush();
+
                 Console.WriteLine(sData);
+
+                StreamWriter sWriter;
+
+                foreach (TcpClient client in viewClients)
+                {
+
+                    sWriter = new StreamWriter(client.GetStream(), Encoding.ASCII);
+
+                    sWriter.WriteLine(sData);
+                    sWriter.Flush();
+
+                }
+
             }
         }
     }

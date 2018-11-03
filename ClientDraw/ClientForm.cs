@@ -24,8 +24,8 @@ namespace ClientDraw
         private StreamWriter _sWriter;
 
         private Boolean _isConnected;
-
-        private string ip = "10.131.69.236";
+        //10.131.69.236"
+        private string ip = "127.0.0.1";
         int port = 25565;
         //
 
@@ -88,22 +88,26 @@ namespace ClientDraw
             //Should be in an Update Method
             if (isDrawing && oldX != -1 && oldY != -1)
             {
+                newX = this.PointToClient(Cursor.Position).X;
+                newY = this.PointToClient(Cursor.Position).Y;
+
                 if (oldX != newX && oldY != newY)
                 {
                     //draw line from old position to new position
 
-                    graphics.DrawLine(pen, new Point(oldX, oldY), new Point(this.PointToClient(Cursor.Position).X, this.PointToClient(Cursor.Position).Y));
+                    graphics.DrawLine(pen, new Point(oldX, oldY), new Point(newX, newY));
 
+                    SendToServer(string.Format("{0},{1},{2},{3}", oldX, oldY, newX, newY));
 
+                    oldX = newX;
+                    oldY = newY;
                     //Method should be in drawclient, and should sent its mouse coordinates
                     //Update coordinates
-                    SendToServer(string.Format("{0},{0},{0},{0}", oldX, oldY, newX, newY));
-                   
+
                 }
 
 
-                oldX = this.PointToClient(Cursor.Position).X;
-                oldY = this.PointToClient(Cursor.Position).Y;
+
 
                 Thread.Sleep(10);
             }
@@ -178,7 +182,7 @@ namespace ClientDraw
             string message = string.Format("{0},{1},{2},{3}", oX, oY, nX, nY);
 
 
-          //  ConvertCoordinates(message);
+            //  ConvertCoordinates(message);
 
             SendToServer(message);
 
@@ -192,7 +196,7 @@ namespace ClientDraw
 
             sData = coordinatesString;
 
-            
+
             // write data and make sure to flush, or the buffer will continue to 
             // grow, and your data might not be sent when you want it, and will
             // only be sent once the buffer is filled.
@@ -290,8 +294,8 @@ namespace ClientDraw
             _client = new TcpClient();
             _client.Connect(IPAddress.Parse(ip), port);
             NetworkStream ns = _client.GetStream();
-            _sReader = new StreamReader(ns, Encoding.UTF8);
-            _sWriter = new StreamWriter(ns, Encoding.UTF8);
+            _sReader = new StreamReader(ns, Encoding.ASCII);
+            _sWriter = new StreamWriter(ns, Encoding.ASCII);
             SendToServer("Draw");
         }
     }

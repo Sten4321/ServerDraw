@@ -22,9 +22,10 @@ namespace ClientViewDraw
         private static TcpClient slaveClient;
         private static StreamReader sReader;
         private static StreamWriter sWriter; //Maybe if we want to make a game
+
         private static bool connected;
         private static int portNumber = 25565;
-        private static string iPAddress = "10.131.69.236";
+        private static string iPAddress = "127.0.0.1";
         private static List<Point[]> drawCordinates = new List<Point[]>();
         Thread viewThread;
 
@@ -84,8 +85,8 @@ namespace ClientViewDraw
         private void GetDrawing()
         {
             NetworkStream getStream = slaveClient.GetStream();//Gets info from client
-            sReader = new StreamReader(getStream, Encoding.UTF8);
-            sWriter = new StreamWriter(getStream, Encoding.UTF8);
+            sReader = new StreamReader(getStream, Encoding.ASCII);
+            sWriter = new StreamWriter(getStream, Encoding.ASCII);
             sWriter.WriteLine("View");
             sWriter.Flush();
             connected = true;
@@ -98,8 +99,9 @@ namespace ClientViewDraw
                     sData = sReader.ReadLine();
                     Recieve(sData);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.ToString());
                     connected = false;
                 }
                 Thread.Sleep(17);
@@ -129,7 +131,8 @@ namespace ClientViewDraw
                 {
                     graphics.DrawLine(pen, point[0], point[1]);
                 }
-                //DrawCordinates.Clear();
+
+                DrawCordinates.Clear();
             }
         }
 
@@ -145,7 +148,7 @@ namespace ClientViewDraw
 
             string[] coordinates = message.Split(',');
 
-            Point[] cords = new Point[1];
+            Point[] cords = new Point[2];
 
 
 
@@ -168,12 +171,12 @@ namespace ClientViewDraw
             if (coordinates[2].All(char.IsDigit))
             {
                 //Updates new y position
-                Int32.TryParse(coordinates[1], out newX);
+                Int32.TryParse(coordinates[2], out newX);
             }   //X
             if (coordinates[3].All(char.IsDigit))
             {
                 //Updates new x position
-                Int32.TryParse(coordinates[0], out newY);
+                Int32.TryParse(coordinates[3], out newY);
 
             }
 
